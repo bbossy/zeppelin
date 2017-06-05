@@ -257,15 +257,34 @@ public class HeliumBundleFactory {
       index = index + 1;
     }
 
+    Map<String, String> existingDevDeps = (Map<String, String>) packageJson.get("devDependencies");
+
+    StringBuilder devDependencies = new StringBuilder();
+    index = 0;
+    for (Map.Entry<String, String> e: existingDevDeps.entrySet()) {
+
+      devDependencies.append("\"").append(e.getValue()).append("\"");
+
+      if (index < existingDevDeps.size() - 1) {
+        devDependencies.append(",\n");
+      }
+      index = index + 1;
+    }
+
     FileUtils.deleteQuietly(new File(bundleDir, PACKAGE_JSON));
     templatePackageJson = templatePackageJson.replaceFirst("PACKAGE_NAME", pkg.getName());
     templatePackageJson = templatePackageJson.replaceFirst("MAIN_FILE", mainFileName);
     templatePackageJson = templatePackageJson.replaceFirst("DEPENDENCIES", dependencies.toString());
+    templatePackageJson = templatePackageJson.replaceFirst(
+        "DEVDEPENDENCIES", devDependencies.toString()
+    );
     FileUtils.write(new File(bundleDir, PACKAGE_JSON), templatePackageJson);
 
     // 2. setup webpack.config
-    FileUtils.write(new File(bundleDir, "webpack.config.js"), templateWebpackConfig);
-
+    File webpackTarget = new File(bundleDir, "webpack.config.js");
+    if (!webpackTarget.exists()) {
+      FileUtils.write(webpackTarget, templateWebpackConfig);
+    }
     return mainFileName;
   }
 
